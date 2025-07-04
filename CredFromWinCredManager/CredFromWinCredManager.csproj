@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Meziantou.Framework.Win32.CredentialManager" Version="1.7.4" />
+    
   </ItemGroup>
 
 </Project>
