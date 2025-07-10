@@ -1,0 +1,237 @@
+
+Step-by-Step: Trigger MSAL Interactive Login from VBA
+
+Step 1: Register an App in Azure AD (Once Only)
+Go to Azure Portal > Azure Active Directory > App registrations.
+
+Click New Registration.
+
+Enter name, and redirect URI (e.g., http://localhost).
+
+Save the Client ID and configure API permissions (e.g., Microsoft Graph).
+
+
+Use VBA to Launch the Login URL
+You will:
+
+Use VBA to open the browser to the MSAL login URL.
+
+After login, you can manually or programmatically retrieve the access_token.
+
+Here’s basic VBA code to launch the MSAL sign-in in a browser:
+
+Sub LaunchMSALLogin()
+    Dim clientId As String
+    Dim tenantId As String
+    Dim redirectUri As String
+    Dim authUrl As String
+    Dim scope As String
+
+    clientId = "YOUR_CLIENT_ID"  ' From Azure App registration
+    tenantId = "common"  ' or your actual tenant ID
+    redirectUri = "http://localhost"  ' Must match Azure app setting
+    scope = "User.Read"  ' Or any Graph scope you granted
+
+    authUrl = "https://login.microsoftonline.com/" & tenantId & "/oauth2/v2.0/authorize" & _
+              "?client_id=" & clientId & _
+              "&response_type=token" & _
+              "&redirect_uri=" & redirectUri & _
+              "&scope=" & scope & _
+              "&response_mode=fragment"
+
+    ' Launch the URL in the default browser
+    ThisWorkbook.FollowHyperlink authUrl
+End Sub
+
+
+
+
+
+
+
+VBA Macro to Run Python Script and Read Token
+Sub GetAccessTokenFromPython()
+    Dim shell As Object
+    Dim tokenFilePath As String
+    Dim token As String
+    Dim fileNum As Integer
+    Dim line As String
+
+    tokenFilePath = ThisWorkbook.Path & "\token.txt"
+
+    ' Run Python script
+    Set shell = CreateObject("WScript.Shell")
+    shell.Run "python """ & ThisWorkbook.Path & "\auth_get_token.py""", 1, True
+
+    ' Wait for token.txt to be written
+    If Dir(tokenFilePath) = "" Then
+        MsgBox "Token file not found. Authentication may have failed.", vbCritical
+        Exit Sub
+    End If
+
+    ' Read token
+    fileNum = FreeFile
+    Open tokenFilePath For Input As #fileNum
+    Line Input #fileNum, line
+    Close #fileNum
+    token = Trim(line)
+
+    MsgBox "Access token retrieved!" & vbCrLf & Left(token, 100) & "..."
+
+    ' Optional: store token in a worksheet cell
+    Sheets(1).Range("A1").Value = token
+End Sub
+
+Optional: Call Microsoft Graph After Auth
+Once you have the token, you can use it in further VBA code to call APIs, e.g.:
+
+Dim http As Object
+Set http = CreateObject("MSXML2.XMLHTTP")
+http.Open "GET", "https://graph.microsoft.com/v1.0/me", False
+http.setRequestHeader "Authorization", "Bearer " & token
+http.Send
+MsgBox http.responseText
+
+
+
+
+      
+    1. Install Python (if not already installed)
+Download and install Python from the official site:
+👉 https://www.python.org/downloads/
+
+Make sure to check the box that says “Add Python to PATH” during installation.
+
+2. Install the MSAL Library
+Once Python is installed, open Command Prompt (or PowerShell) and run:
+      pip install msal
+      
+To confirm msal installed correctly, you can run:
+      python -c "import msal; print(msal.__version__)"
+
+
+Option 1: Simple VBA Registry Access using GetSetting (Only for VBA-created keys)
+        Sub ReadFromRegistrySimple()
+    Dim regValue As String
+    regValue = GetSetting("MyApp", "Settings", "UserName", "DefaultUser")
+    MsgBox "Registry value: " & regValue
+End Sub
+🟡 Limitation: Works only under:
+HKEY_CURRENT_USER\Software\VB and VBA Program Settings\MyApp\Settings
+
+Option 2: General Registry Read (Advanced)
+For reading any registry key (like Office settings, system info, etc.), use Windows API calls.
+
+          Private Declare PtrSafe Function RegOpenKeyEx Lib "advapi32.dll" Alias "RegOpenKeyExA" ( _
+    ByVal hKey As Long, ByVal lpSubKey As String, ByVal ulOptions As Long, _
+    ByVal samDesired As Long, phkResult As Long) As Long
+
+Private Declare PtrSafe Function RegQueryValueEx Lib "advapi32.dll" Alias "RegQueryValueExA" ( _
+    ByVal hKey As Long, ByVal lpValueName As String, ByVal lpReserved As Long, _
+    lpType As Long, lpData As Any, lpcbData As Long) As Long
+
+Private Declare PtrSafe Function RegCloseKey Lib "advapi32.dll" (ByVal hKey As Long) As Long
+
+Const HKEY_LOCAL_MACHINE = &H80000002
+Const KEY_READ = &H20019
+Const ERROR_SUCCESS = 0
+
+Function ReadRegistryValue() As String
+    Dim hKey As Long
+    Dim lpData As String * 255
+    Dim lpcbData As Long
+    Dim result As Long
+
+    Dim regPath As String
+    Dim valueName As String
+
+    regPath = "SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+    valueName = "ProductName"
+
+    result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, regPath, 0, KEY_READ, hKey)
+    If result = ERROR_SUCCESS Then
+        lpcbData = Len(lpData)
+        result = RegQueryValueEx(hKey, valueName, 0, 0, ByVal lpData, lpcbData)
+        If result = ERROR_SUCCESS Then
+            ReadRegistryValue = Left(lpData, InStr(lpData, Chr(0)) - 1)
+        Else
+            ReadRegistryValue = "Error reading value"
+        End If
+        RegCloseKey hKey
+    Else
+        ReadRegistryValue = "Error opening key"
+    End If
+End Function
+
+Sub TestReadRegistry()
+    MsgBox "Windows Edition: " & ReadRegistryValue()
+End Sub
+
+
+Notes:
+This example reads the Windows version name from the registry.
+
+It uses HKEY_LOCAL_MACHINE, but you can use other root keys like HKEY_CURRENT_USER or HKEY_CLASSES_ROOT.
+
+You can adapt it to read from any path/value name.
+
+Option 2: Use PowerShell from VBA to Read Stored Credentials
+You can store and retrieve credentials in Credential Manager using PowerShell, and VBA can call PowerShell to extract credentials.
+
+📦 Step-by-Step:
+Save a credential in Windows Credential Manager (Generic Credential).
+
+Use a PowerShell script to read it.
+
+Call that script from VBA and capture the output.
+
+📜 PowerShell Script to Read Credential (save as get-cred.ps1):
+$cred = Get-StoredCredential -Target "MyAppCred"
+if ($cred) {
+    Write-Output "$($cred.Username)|$($cred.Password)"
+} else {
+    Write-Output "ERROR"
+}
+
+
+ Requires the CredentialManager module
+Install with: powershell
+
+Install-Module -Name CredentialManager -Scope CurrentUser
+
+VBA Code to Call PowerShell and Parse Output:
+Sub GetWindowsCredential()
+    Dim shell As Object
+    Dim exec As Object
+    Dim output As String
+    Dim user As String, pass As String
+
+    Set shell = CreateObject("WScript.Shell")
+    Set exec = shell.Exec("powershell -ExecutionPolicy Bypass -File """ & ThisWorkbook.Path & "\get-cred.ps1""")
+
+    output = exec.StdOut.ReadAll
+    output = Trim(output)
+
+    If output = "ERROR" Then
+        MsgBox "Credential not found."
+        Exit Sub
+    End If
+
+    user = Split(output, "|")(0)
+    pass = Split(output, "|")(1)
+
+    MsgBox "Username: " & user & vbCrLf & "Password: " & pass
+End Sub
+
+How to Store Credentials
+Use PowerShell to add the credential once:
+
+$Password = ConvertTo-SecureString "MySecret123" -AsPlainText -Force
+New-StoredCredential -Target "MyAppCred" -Username "myuser@domain.com" -Password $Password -Persist LocalMachine
+
+
+
+                                    
+                                    
+                              
+                              
