@@ -1,4 +1,44 @@
 
+VBA Code: HTTP GET with Auth Token
+
+Sub CallAPIWithAuthToken()
+    Dim http As Object
+    Dim url As String
+    Dim authToken As String
+    Dim response As String
+
+    ' Create HTTP object
+    Set http = CreateObject("MSXML2.XMLHTTP")
+
+    ' API endpoint
+    url = "https://dummy.restapiexample.com/api/v1/employees"  ' Replace with your actual endpoint
+
+    ' Authorization token
+    authToken = "Bearer YOUR_AUTH_TOKEN_HERE"  ' Replace with your token
+
+    ' Prepare GET request
+    http.Open "GET", url, False
+    ' http.setRequestHeader "Authorization", authToken
+    http.setRequestHeader "Content-Type", "application/json"
+
+    ' Send the request
+    http.Send
+
+    ' Handle response
+    If http.Status = 200 Then
+        response = http.responseText
+        ' You can also write response to a worksheet cell:
+        Sheets(1).Range("A1").Value = response
+        MsgBox "Success!" & vbCrLf & Left(response, 300) & "..."  ' Limit preview
+    Else
+        MsgBox "Error " & http.Status & ": " & http.statusText
+    End If
+
+    Set http = Nothing
+End Sub
+
+
+
 Step-by-Step: Trigger MSAL Interactive Login from VBA
 
 Step 1: Register an App in Azure AD (Once Only)
