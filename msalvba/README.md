@@ -1,4 +1,44 @@
 # Acquiring Azure Entra ID token in excel VBA
+
+### Python Installation
+1. Install Python (if not already installed)
+Download and install Python from the official site:
+https://www.python.org/downloads/
+
+Make sure to check the box that says “Add Python to PATH” during installation.
+
+2. Install the MSAL Library
+Once Python is installed, open Command Prompt (or PowerShell) and run:
+
+      pip install msal
+      
+To confirm msal installed correctly, you can run:
+
+      python -c "import msal; print(msal.__version__)"
+
+### Ensure your app is registered as a public client:
+
+* Go to https://portal.azure.com:
+
+* Navigate to Azure Active Directory > App registrations > Your App.
+
+* Under Authentication, scroll to "Platform configurations".
+
+* Ensure there is a "Mobile and desktop applications" platform added.
+
+* Inside that, ensure "http://localhost/abc" is listed as a redirect URI.
+
+* Also ensure "Allow public client flows" is enabled:
+ 
+* Scroll to Advanced settings and set "Allow public client flows" to Yes.
+
+```plaintext
+Do NOT use client_secret or client_assertion in public client flows.
+
+MSAL's PublicClientApplication does not require them and will throw that error if Azure expects them.
+```
+
+
 # Setup Windows Registry
 Add your 
 ```plaintext
