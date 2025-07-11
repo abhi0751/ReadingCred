@@ -4,7 +4,7 @@ Minimum code to read and write credential in Windows credential manager and Wind
 
 Tested with Windows 11(x64) and Dot Net version 8.0
 
-![Code in module](Code-in-module.png)
+
 # VBA Module   
   
 ```vbscript
@@ -40,6 +40,16 @@ ReadError:
     MsgBox "Failed to read access token from registry. Ensure Python script ran successfully.", vbCritical
 End Sub
 ```
+![Code in module](Code-in-module.png)
+# Call this module in main 
+
+```vbscript
+Private Sub Workbook_Open()
+    Call GetAccessTokenFromRegistry
+End Sub
+```
+
+![call in main sheet](call-in-main-sheet.png)
 
 
 
