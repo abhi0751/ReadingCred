@@ -49,12 +49,13 @@ in registry. This should be in "Computer\HKEY_CURRENT_USER\"
 
 Registry folder names you can choose as per your need, this will use in python code and VBA code
 
-![Win Registry setup](Win-Registry-setup.png)
+
+![Win Registry setup](Doc-images/Win-Registry-setup.png)
 
 # File Structure in Folder
 
 All these files must be in same folder
-![Files in Folder](Files-in-Folder.png)
+![Files in Folder](Doc-images/Files-in-Folder.png)
 
 # Open auth_get_token.py
 Open this python file and adjust the path as per your folder location.
@@ -70,7 +71,7 @@ Define these parameter values
 REGISTRY_PATH = r"Shukla\ShuklaApp"
 TOKEN_FILE = "D:\\msalvba\\token.txt"
 ```
-![parameter in python code](parameter-in-python-code.png)
+![parameter in python code](Doc-images/parameter-in-python-code.png)
 
 ```python
 # auth_get_token.py
@@ -214,7 +215,7 @@ ReadError:
     MsgBox "Failed to read access token from registry. Ensure Python script ran successfully.", vbCritical
 End Sub
 ```
-![Code in module](Code-in-module.png)
+![Code in module](Doc-images/Code-in-module.png)
 # Call this module in main 
 
 Steps to Automatically Run the Macro on Excel Open:
@@ -234,30 +235,30 @@ Private Sub Workbook_Open()
 End Sub
 ```
 
-![call in main sheet](call-in-main-sheet.png)
+![call in main sheet](Doc-images/call-in-main-sheet.png)
 
 # Run your Macro Enabled Excel file
 it will launch a browser , select the account.
 
-![Auth account selection](Auth-account-selection.png)
+![Auth account selection](Doc-images/Auth-account-selection.png)
 
 After the authentication. you will see a message in browser
 
-![Auth success browser](Auth-success-browser.png)
+![Auth success browser](Doc-images/Auth-success-browser.png)
 
 You will see something similar in your excel. You can validate, this token is written in Token.txt file and in your registry location. 
 
 VBA code has read this token from Registry
 
-![Token-excel](Token-in-excel.png)
+![Token-excel](Doc-images/Token-in-excel.png)
 
 Token Stored in Registry 
 
-![Token-in-registry](Token-in-registry.png)
+![Token-in-registry](Doc-images/Token-in-registry.png)
 
 Token stored in Token.Txt
 
-![Token-Stored-in-txt](Token-stored-in-txt.png)
+![Token-Stored-in-txt](Doc-images/Token-stored-in-txt.png)
 
 # Final Notes
 
