@@ -187,5 +187,28 @@ End Sub
 
 ![call in main sheet](call-in-main-sheet.png)
 
+# Run your Macro Enabled Excel file
+it will launch a browser , select the account.
+
+![Auth account selection](Auth-account-selection.png)
+
+After the authentication. you will see a message in browser
+
+![Auth success browser](Auth-success-browser.png)
+
+You will see something similar in your excel. You can validate, this token is written in Token.txt file and in your registry location. 
+
+VBA code has read this token from Registry
+
+![Token-excel](Token-in-excel.png)
+
+Token Stored in Registry 
+
+![Token-in-registry](Token-in-registry.png)
+
+Token stored in Token.Txt
+
+![Token-Stored-in-txt](Token-stored-in-txt.png)
+
 
 
