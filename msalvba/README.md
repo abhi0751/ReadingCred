@@ -4,7 +4,7 @@ Minimum code to read and write credential in Windows credential manager and Wind
 
 Tested with Windows 11(x64) and Dot Net version 8.0
 
-![Code in module](msalvba/Code-in-module.png)
+![Code in module](/Code-in-module.png)
 # VBA Module   
   
 ```vbscript
