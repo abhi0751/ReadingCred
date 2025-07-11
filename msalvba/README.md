@@ -1,8 +1,4 @@
-# ReadingCred
-
-Minimum code to read and write credential in Windows credential manager and Windows Registry.
-
-Tested with Windows 11(x64) and Dot Net version 8.0
+# Acquiring Azure Entra ID token in excel VBA
 # Setup Windows Registry
 Add your 
 ```plaintext
@@ -141,7 +137,9 @@ if __name__ == "__main__":
 ```
 
 
-# VBA Module   
+# VBA Module  
+
+Specify the Python.exe path in your VBA code.
   
 ```vbscript
 Sub GetAccessTokenFromRegistry()
@@ -179,6 +177,17 @@ End Sub
 ![Code in module](Code-in-module.png)
 # Call this module in main 
 
+Steps to Automatically Run the Macro on Excel Open:
+
+* Open the Excel workbook.
+
+* Press ALT + F11 to open the VBA editor.
+
+* In the Project Explorer (left pane),  double-click ThisWorkbook under your workbook's name.
+
+
+In the code window that appears, paste the following:
+
 ```vbscript
 Private Sub Workbook_Open()
     Call GetAccessTokenFromRegistry
@@ -209,6 +218,15 @@ Token Stored in Registry
 Token stored in Token.Txt
 
 ![Token-Stored-in-txt](Token-stored-in-txt.png)
+
+# Final Notes
+
+* Make sure auth_get_token.py is in the same folder as your Excel workbook.
+
+* Ensure python is available in your system's PATH.
+
+* You may need to enable macros : 
+Excel > File > Options > Trust Center > Trust Center Settings > Macro Settings
 
 
 
