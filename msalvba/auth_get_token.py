@@ -9,14 +9,17 @@ DEFAULT_CLIENT_ID = ''
 DEFAULT_TENANT_ID = ''
 DEFAULT_SCOPE = ['User.Read']
 
+REGISTRY_PATH = r"Shukla\ShuklaApp"
+TOKEN_FILE = "D:\\msalvba\\token.txt"
+
 
 def read_registry_value(key_name: str, default=None):
     """
-    Reads a string value from HKEY_CURRENT_USER\\Shukla\\ShuklaApp.
+    Reads a string value from HKEY_CURRENT_USER\\REGISTRY_PATH.
     Returns the value if found, otherwise returns the default.
     """
     try:
-        registry_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Shukla\ShuklaApp", 0, winreg.KEY_READ)
+        registry_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, REGISTRY_PATH, 0, winreg.KEY_READ)
         value, _ = winreg.QueryValueEx(registry_key, key_name)
         winreg.CloseKey(registry_key)
         return value
@@ -29,10 +32,10 @@ def read_registry_value(key_name: str, default=None):
 
 def store_token_in_registry(token):
     """
-    Stores the token and creation time in the registry under HKEY_CURRENT_USER\\Shukla\\ShuklaApp.
+    Stores the token and creation time in the registry under HKEY_CURRENT_USER\\REGISTRY_PATH.
     """
     try:
-        registry_key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, r"Shukla\ShuklaApp")
+        registry_key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, REGISTRY_PATH)
         winreg.SetValueEx(registry_key, "AccessToken", 0, winreg.REG_SZ, token)
 
         timestamp = datetime.now(timezone.utc).isoformat()
@@ -88,9 +91,9 @@ def get_token():
 if __name__ == "__main__":
     token = get_token()
     if token:
-        with open("D:\\msalvba\\token.txt", "w") as f:
+        with open(TOKEN_FILE, "w") as f:
             f.write(token)
-        print("Token saved to token.txt")
+        print(f"Token saved to {TOKEN_FILE}")
 
         # Save to registry
         store_token_in_registry(token)
