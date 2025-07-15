@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "AuthTokenManager": {
+      "commandName": "Project",
+      "commandLineArgs": "\"Shukla\\ShuklaApp\""
+    }
+  }
+}
