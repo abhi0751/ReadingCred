@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ConfigCreator": {
+      "commandName": "Project",
+      "commandLineArgs": "-m -a -s"
+    }
+  }
+}

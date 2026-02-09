@@ -1,38 +1,33 @@
 ﻿using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 using System.Text.Json;
-using static ConfigCreator.Program;
+
 namespace ConfigCreator
 {
-    class Program
+    internal class Program
     {
         public class Config
         {
-            
             public string RegistryHive { get; set; } = "HKCU";
             public string RegistryBasePath { get; set; }
             public List<string> KeysToCreate { get; set; } = new();
         }
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             string commandAssemblyName = "Configcreator.exe";
             string mode = "Auto";   // default
             string fileName = null;
+            bool isSilentInstall = false;
 
             for (int i = 0; i < args.Length; i++)
             {
                 switch (args[i].ToLower())
                 {
-
                     case "-help":
                     case "-h":
                         ShowHelp(commandAssemblyName);
                         return;
-
 
                     case "-mode":
                     case "-m":
@@ -48,19 +43,30 @@ namespace ConfigCreator
 
                         switch (modeValue)
                         {
-
-
                             case "-auto":
                             case "-a":
                                 mode = "Auto";
+
+                                if (i + 1 < args.Length)
+                                {
+                                    string silent = args[i + 1];
+                                    if (silent != null && silent == "-s")
+                                    {
+                                        isSilentInstall = true;
+                                    }
+                                    i++;
+                                }
+
                                 break;
 
                             case "-file":
                             case "-f":
                                 mode = "File";
+
                                 if (i + 1 < args.Length)
                                 {
                                     fileName = args[i + 1];
+
                                     i++;
                                 }
                                 else
@@ -69,6 +75,15 @@ namespace ConfigCreator
                                     return;
                                 }
 
+                                if (i + 1 < args.Length)
+                                {
+                                    string silent = args[i + 1];
+                                    if (silent != null && silent == "-s")
+                                    {
+                                        isSilentInstall = true;
+                                        i++;
+                                    }
+                                }
 
                                 break;
 
@@ -83,14 +98,11 @@ namespace ConfigCreator
                         }
                         break;
 
-                    // Only valid AFTER mode=file
+                        // Only valid AFTER mode=file
 
-
-
-
-                    default:
-                        Console.WriteLine($"Unknown argument: {args[i]} at {i}");
-                        return;
+                        // default:
+                        //  Console.WriteLine($"Unknown argument: {args[i]} at {i}");
+                        //  return;
                 }
             }
 
@@ -104,9 +116,7 @@ namespace ConfigCreator
             // -------- EXECUTION --------
             Console.WriteLine($"Mode : {mode}");
             Console.WriteLine($"File : {fileName}");
-
-
-
+            Console.WriteLine($"silent install : {isSilentInstall}");
 
             // ---------- Execute Based on Mode ----------
             Config config;
@@ -116,11 +126,13 @@ namespace ConfigCreator
                 case "Auto":
                     Console.WriteLine("Running in AUTO mode...");
                     config = LoadConfiginAutoMode();
-                    RunConfig(config);
+                    RunConfig(config, isSilentInstall);
                     break;
 
                 case "File":
                     config = LoadConfig(fileName);
+                    RunConfig(config, isSilentInstall);
+
                     break;
 
                 case "Manual":
@@ -133,23 +145,9 @@ namespace ConfigCreator
                     throw new Exception("Unexpected mode");
             }
         }
-        // RunApplication(config);
 
-
-
-
-
-
-
-
-
-
-
-
-
-        static void RunManualMode()
+        private static void RunManualMode()
         {
-            Console.WriteLine("Running in MANUAL mode...");
             Console.Write("Would you like to continue with manual entry? (yes/no): ");
             string choice = Console.ReadLine()?.Trim().ToLower();
 
@@ -159,7 +157,7 @@ namespace ConfigCreator
                 return;
             }
 
-             Config config = new Config();
+            Config config = new Config();
 
             Console.Write("Enter registry hive (HKCU or HKLM): ");
             config.RegistryHive = Console.ReadLine()?.Trim().ToUpper() ?? "HKCU";
@@ -173,7 +171,7 @@ namespace ConfigCreator
                 Console.WriteLine($"Invalid registry hive: {config.RegistryHive}. Exiting.");
                 return;
             }
-            CheckOrCreateBasePath(rootKey, config.RegistryBasePath);
+            CheckOrCreateBasePath(rootKey, config.RegistryBasePath, false);
 
             while (true)
             {
@@ -202,113 +200,108 @@ namespace ConfigCreator
             }
         }
 
-            static void ShowHelp(string commandAssemblyName)
-            {
-                Console.WriteLine("Usage:");
-                Console.WriteLine($"  {commandAssemblyName} [options]");
-                Console.WriteLine();
-                Console.WriteLine("Options:");
-                Console.WriteLine("  -h | -help                           Show help");
-                Console.WriteLine("  -m | -mode <value>                   Set run mode");
-                Console.WriteLine("       auto | -a                        Automatic mode");
-                Console.WriteLine("       file | -f  <filename>           Load from file");
-                Console.WriteLine("       manual | -m           Manual entry");
+        private static void ShowHelp(string commandAssemblyName)
+        {
+            Console.WriteLine("Usage:");
+            Console.WriteLine($"  {commandAssemblyName} [options]");
+            Console.WriteLine();
+            Console.WriteLine("Options:");
+            Console.WriteLine("  -h | -help                           Show help");
+            Console.WriteLine("  -m | -mode <value>                   Set run mode");
+            Console.WriteLine("       -auto | -a                        Automatic mode");
+            Console.WriteLine("       -auto | -a -s                       Automatic mode with silent installation, no user input.");
+            Console.WriteLine("       -file | -f  <filename>           Load from file");
+            Console.WriteLine("       -file | -f  <filename> -s          Load from file with silent installation, no user input.");
+            Console.WriteLine("       -manual | -m           Manual entry");
 
-                Console.WriteLine();
-                Console.WriteLine("Examples:");
-                Console.WriteLine($"  {commandAssemblyName} -m auto");
-                Console.WriteLine($"  {commandAssemblyName} -m file -f cfg.json");
-                Console.WriteLine($"  {commandAssemblyName} -m manual");
+            Console.WriteLine();
+            Console.WriteLine("Examples:");
+            Console.WriteLine($"  {commandAssemblyName} -m -auto/-a");
+            Console.WriteLine($"  {commandAssemblyName} -m -auto/-a -s");
+            Console.WriteLine($"  {commandAssemblyName} -m -file/-f cfg.json");
+            Console.WriteLine($"  {commandAssemblyName} -m -file/-f cfg.json -s");
+            Console.WriteLine($"  {commandAssemblyName} -m manual");
+        }
+
+        private static Config LoadConfiginAutoMode()
+        {
+            string exePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string filePath = Path.Combine(exePath, "a1.txt");
+            return LoadConfig(filePath);
+        }
+
+        private static Config LoadConfig(string filePath)
+        {
+            try
+            {
+                string json = File.ReadAllText(filePath);
+                return JsonSerializer.Deserialize<Config>(json);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to load config: {ex.Message}");
+                return new Config();
+            }
+        }
+
+        private static void RunConfig(Config config, bool isSilentinstall)
+        {
+            if (string.IsNullOrWhiteSpace(config.RegistryHive))
+                config.RegistryHive = "HKCU";
+
+            if (string.IsNullOrWhiteSpace(config.RegistryBasePath))
+            {
+                Console.WriteLine("Config file is missing 'RegistryBasePath'. Exiting.");
+                return;
             }
 
-            static Config LoadConfiginAutoMode()
+            Console.WriteLine($"Loaded config. Registry Hive: {config.RegistryHive}, Path: HKEY_{config.RegistryHive}\\{config.RegistryBasePath}");
+            RegistryKey rootKey = GetRootRegistryKey(config.RegistryHive);
+            if (rootKey == null)
             {
-                string exePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                string filePath = Path.Combine(exePath, "a1.txt");
-                return LoadConfig(filePath);
-
-
-
+                Console.WriteLine($"Invalid registry hive: {config.RegistryHive}. Exiting.");
+                return;
             }
 
-            static Config LoadConfig(string filePath)
+            // Validate and optionally create base path
+            if (!CheckOrCreateBasePath(rootKey, config.RegistryBasePath, isSilentinstall))
             {
-                try
-                {
-                    string json = File.ReadAllText(filePath);
-                    return JsonSerializer.Deserialize<Config>(json);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Failed to load config: {ex.Message}");
-                    return new Config();
-                }
+                Console.WriteLine("Exiting program.");
+                return;
             }
 
-            static void RunConfig(Config config)
+            if (config.KeysToCreate?.Count > 0)
             {
-                if (string.IsNullOrWhiteSpace(config.RegistryHive))
-                    config.RegistryHive = "HKCU";
-
-                if (string.IsNullOrWhiteSpace(config.RegistryBasePath))
+                foreach (var keyentity in config.KeysToCreate)
                 {
-                    Console.WriteLine("Config file is missing 'RegistryBasePath'. Exiting.");
-                    return;
+                    var inputkey = keyentity.Split(":");
+                    string keyName = inputkey[0].Trim();
+                    string keyvalue = inputkey[1].Trim();
+                    WriteToRegistry(rootKey, config.RegistryBasePath, keyName, keyvalue);
                 }
-
-                Console.WriteLine($"Loaded config. Registry Hive: {config.RegistryHive}, Path: HKEY_{config.RegistryHive}\\{config.RegistryBasePath}");
-                RegistryKey rootKey = GetRootRegistryKey(config.RegistryHive);
-                if (rootKey == null)
-                {
-                    Console.WriteLine($"Invalid registry hive: {config.RegistryHive}. Exiting.");
-                    return;
-                }
-
-                // Validate and optionally create base path
-                if (!CheckOrCreateBasePath(rootKey, config.RegistryBasePath))
-                {
-                    Console.WriteLine("Exiting program.");
-                    return;
-                }
-
-                if (config.KeysToCreate?.Count > 0)
-                {
-                    foreach (var keyentity in config.KeysToCreate)
-                    {
-                        var inputkey = keyentity.Split(":");
-                        string keyName = inputkey[0].Trim();
-                        string keyvalue = inputkey[1].Trim();
-                        WriteToRegistry(rootKey, config.RegistryBasePath, keyName, keyvalue);
-                    }
-                }
-
-
             }
+        }
 
-            static RegistryKey GetRootRegistryKey(string hive)
+        private static RegistryKey GetRootRegistryKey(string hive)
+        {
+            return hive switch
             {
-                return hive switch
-                {
-                    "HKCU" => Registry.CurrentUser,
-                    "HKLM" => Registry.LocalMachine,
-                    _ => null
-                };
-            }
+                "HKCU" => Registry.CurrentUser,
+                "HKLM" => Registry.LocalMachine,
+                _ => null
+            };
+        }
 
-            static bool CheckOrCreateBasePath(RegistryKey root, string basePath)
+        private static bool CheckOrCreateBasePath(RegistryKey root, string basePath, bool isSilentInstall)
+        {
+            RegistryKey existingKey = root.OpenSubKey(basePath, writable: true);
+
+            if (existingKey == null)
             {
-                RegistryKey existingKey = root.OpenSubKey(basePath, writable: true);
+                Console.WriteLine($"Registry base path '{root.Name}\\{basePath}' does not exist.");
 
-                if (existingKey == null)
+                if (isSilentInstall)
                 {
-                    Console.WriteLine($"Registry base path '{root.Name}\\{basePath}' does not exist.");
-
-                    Console.Write("Would you like to create it? (yes/no): ");
-                    string answer = Console.ReadLine()?.Trim().ToLower();
-
-                    if (answer != "yes")
-                        return false;
-
                     try
                     {
                         root.CreateSubKey(basePath);
@@ -322,30 +315,44 @@ namespace ConfigCreator
                 }
                 else
                 {
-                    existingKey.Dispose();
-                }
-
-                return true;
-            }
-
-            static void WriteToRegistry(RegistryKey root, string basePath, string keyName, string value)
-            {
-                try
-                {
-                    using (RegistryKey baseKey = root.CreateSubKey(basePath))
+                    Console.Write("Would you like to create it? (yes/no): ");
+                    string answer = Console.ReadLine()?.Trim().ToLower();
+                    if (answer != "yes")
+                        return false;
+                    try
                     {
-                        baseKey.SetValue(keyName, value);
-                        Console.WriteLine($"'{keyName}' = '{value}' written successfully under {root.Name}\\{basePath}");
+                        root.CreateSubKey(basePath);
+                        Console.WriteLine($"Created base path: {root.Name}\\{basePath}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to create registry path: {ex.Message}");
+                        return false;
                     }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error writing to registry: {ex.Message}");
-                }
+            }
+            else
+            {
+                existingKey.Dispose();
             }
 
-        
-        
+            return true;
         }
 
+        private static void WriteToRegistry(RegistryKey root, string basePath, string keyName, string value)
+        {
+            try
+            {
+                using (RegistryKey baseKey = root.CreateSubKey(basePath))
+                {
+                    baseKey.SetValue(keyName, value);
+                    Console.WriteLine($"'{keyName}' = '{value}' written successfully under {root.Name}\\{basePath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error writing to registry: {ex.Message}");
+            }
+        }
     }
+}
