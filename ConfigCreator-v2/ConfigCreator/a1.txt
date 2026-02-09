@@ -1,0 +1,9 @@
+{
+  "RegistryHive": "HKCU",
+  "RegistryBasePath": "Software\\MyApp",
+  "KeysToCreate": [
+    "Theme:DemoTheme",
+    "ApiToken:DemoAPIToken",
+    "AutoUpdate:DemoAutoUpdate"
+  ]
+}
